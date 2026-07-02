@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
-from model import draw_curve
+from model import curve
 
 # Read ordered data
 data = pd.read_csv("data/ordered_xy.csv")
@@ -14,7 +14,7 @@ t = np.linspace(6, 60, len(data))
 def find_error(values):
     theta, m, shift = values
 
-    x, y = draw_curve(t, theta, m, shift)
+    x, y = curve(t, theta, m, shift)
 
     error_x = np.mean(np.abs(x - data["x"]))
     error_y = np.mean(np.abs(y - data["y"]))
