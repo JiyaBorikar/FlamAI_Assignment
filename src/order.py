@@ -1,48 +1,44 @@
-import numpy as np
 import pandas as pd
-from scipy.optimize import minimize
+import numpy as np
+import matplotlib.pyplot as plt
 
-from model import curve
+data = pd.read_csv("data/xy_data.csv")
 
-# Read ordered data
-data = pd.read_csv("data/ordered_xy.csv")
+points = data[["x", "y"]].to_numpy()
 
-# t values
-t = np.linspace(6, 60, len(data))
+used = np.zeros(len(points), dtype=bool)
 
+# Start from leftmost point
+index = np.argmin(points[:, 0])
 
-def error(values):
-    theta, m, shift = values
+new_points = []
 
-    x, y = curve(t, theta, m, shift)
+for i in range(len(points)):
+    new_points.append(points[index])
+    used[index] = True
 
-    x_error = np.mean(np.abs(x - data["x"]))
-    y_error = np.mean(np.abs(y - data["y"]))
+    dist = np.linalg.norm(points - points[index], axis=1)
+    dist[used] = np.inf
 
-    return x_error + y_error
+    index = np.argmin(dist)
 
+new_points = np.array(new_points)
 
-# Starting values
-guess = [25, 0.02, 50]
+new_data = pd.DataFrame(new_points, columns=["x", "y"])
+new_data.to_csv("data/ordered_xy.csv", index=False)
 
-# Limits
-limits = [
-    (0, 50),
-    (-0.05, 0.05),
-    (0, 100)
-]
+plt.figure(figsize=(7, 7))
 
-result = minimize(
-    error,
-    guess,
-    bounds=limits,
-    method="L-BFGS-B"
-)
+plt.plot(new_points[:, 0], new_points[:, 1])
+plt.scatter(new_points[:, 0], new_points[:, 1], s=2)
 
-theta, m, shift = result.x
+plt.title("Ordered Curve")
+plt.xlabel("X")
+plt.ylabel("Y")
 
-print("\nFinal Values:")
-print(f"Theta : {theta:.4f}")
-print(f"M     : {m:.6f}")
-print(f"X     : {shift:.4f}")
-print(f"Error : {result.fun:.6f}")
+plt.grid(True)
+plt.axis("equal")
+
+plt.show()
+
+print("Ordered data saved")
